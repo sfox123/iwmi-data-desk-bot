@@ -1,11 +1,12 @@
 # Data Desk intake: one cycle every 30 minutes (files Data Drop arrivals, publishes Met Dept bulletins to AWARE).
 # State lives in SharePoint (_system/state.json, config.yaml state.backend), so runs don't need a disk.
-# Every 30 min keeps a private repo inside the free 2,000 Actions minutes a month (~1,450 used);
-# change the cron to '*/10 * * * *' if the account has more minutes.
+# Every 30 min keeps a private repo inside the free 2,000 Actions minutes a month (~1,450 used).
+# Runs at :07 and :37 rather than :00/:30, which are GitHub's busiest minutes, when scheduled runs get delayed or dropped.
+# For every 10 min (needs more Actions minutes), use '2-59/10 * * * *'.
 name: Data Desk intake
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '7,37 * * * *'
   workflow_dispatch:
     inputs:
       dry_run:
