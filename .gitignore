@@ -1,0 +1,11 @@
+.env
+state/*
+!state/.gitkeep
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.pem
+*.pfx
+*.p12

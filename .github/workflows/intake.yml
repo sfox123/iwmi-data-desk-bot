@@ -1,0 +1,38 @@
+# Data Desk intake: one cycle every 30 minutes (files Data Drop arrivals, publishes Met Dept bulletins to AWARE).
+# State lives in SharePoint (_system/state.json, config.yaml state.backend), so runs don't need a disk.
+# Every 30 min keeps a private repo inside the free 2,000 Actions minutes a month (~1,450 used);
+# change the cron to '*/10 * * * *' if the account has more minutes.
+name: Data Desk intake
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run: log decisions only, change nothing'
+        type: boolean
+        default: false
+concurrency:
+  group: datadesk-intake
+  cancel-in-progress: false
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python run.py ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          SITE_ID: ${{ secrets.SITE_ID }}
+          DRIVE_ID: ${{ secrets.DRIVE_ID }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          MET_UPLOAD_TOKEN: ${{ secrets.MET_UPLOAD_TOKEN }}
+          MAX_DOWNLOAD_MB: '2048'

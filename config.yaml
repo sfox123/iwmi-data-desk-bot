@@ -1,0 +1,142 @@
+# Data Desk Bot — intake & filing configuration.
+# Categories, regions and sources are data, not code: add new working areas here.
+
+paths:
+  # Intake folders (relative to the Documents drive root). Whole subtrees are watched.
+  intake:
+    - "Data Drop"
+    - "Apps/Microsoft Teams Mailhook/Data Drop"
+  mailhook: "Apps/Microsoft Teams Mailhook/Data Drop"
+  data_root: "Data"
+  catalog_folder: "Catalog and Water Accounting"
+  needs_review: "_Inbox/needs-review"
+  duplicates: "_Inbox/duplicates"
+  # Where filed .eml messages go. Set to null to leave them in the mailhook folder.
+  emails: "_Inbox/emails"
+
+thresholds:
+  min_confidence: 0.5
+  upload_settle_minutes: 2       # files modified more recently are re-checked next cycle
+  email_wait_cycles: 2           # cycles an attachment waits for its .eml before going without
+  max_attempts: 3                # failed processing attempts before giving up on a file
+  summary_card_threshold: 5      # more files than this in one run -> one summary card
+  global_lon_span: 90            # bbox wider than this (degrees lon) -> region "Global"
+
+schedule:
+  poll_interval_minutes: 10
+
+filing:
+  move_mode: move                # move | copy  (copy leaves the original in the intake folder)
+  latest_copy: false             # also keep a copy of the newest version in <Dataset>/latest/
+  metadata_columns: true         # set library columns (Category, Region, ...) when they exist
+
+state:
+  backend: sharepoint            # local | sharepoint (GitHub Actions runs keep no disk between runs)
+  local_path: "state/state.json"
+  sharepoint_path: "_system/state.json"
+
+# Dept. of Meteorology 15-day forecast bulletins (PDF named <YYYYMMDD>_00Z.pdf) are published to AWARE Sri
+# Lanka's forecast maps, then filed under `folder`/<year>/. AWARE checks the PDF against the bulletin layout;
+# anything else is filed as usual. Emailed bulletins must come from allowed_senders (address or @domain).
+# Needs MET_UPLOAD_TOKEN in .env (the same value as in the AWARE Vercel project).
+met_bulletin:
+  enabled: true
+  upload_url: "https://aware-srilanka.vercel.app/api/met/upload"
+  site_url: "https://aware-srilanka.vercel.app"
+  folder: "Data/Climate/Sri Lanka/DoM_15day_forecast"
+  allowed_senders: ["@meteo.gov.lk", "@cgiar.org"]
+
+# Files matching these (case-insensitive regex on the original filename) are left alone.
+ignore_patterns:
+  - '^~\$'
+  - '\.tmp$'
+  - '^\.~lock\.'
+  - '^image\d{3}\.(png|jpe?g|gif)$'   # inline signature images saved from emails
+
+categories:
+  Climate:       [precip, precipitation, pr, tp, rain, rainfall, chirps, era5, tas, tmax, tmin, temperature, et, evapotranspiration, pet, aet]
+  Hydrology:     [flood, flooded, flooding, inundation, discharge, streamflow, runoff, flow, groundwater, gw, reservoir, lake, water_level, storage, tws, grace]
+  LandUse:       [landcover, land_cover, lulc, irrigation, cropland, ndvi, evi, lai]
+  Boundaries:    [basin, catchment, watershed, admin, boundary, gadm, hydrobasins]
+  Socioeconomic: [survey, household, population, census, income, socio]
+fallback: _Inbox/needs-review
+
+# Known data sources. Key = name used in folders/filenames; values = aliases to match.
+sources:
+  CHIRPS: [chirps]
+  CHIRTS: [chirts]
+  ERA5-Land: [era5-land, era5 land, era5land]
+  ERA5: [era5]
+  GRACE: [grace, grace-fo]
+  MODIS: [modis, mod13, mod16, mod17, myd13]
+  Landsat: [landsat]
+  Sentinel: [sentinel, sentinel-1, sentinel-2]
+  TerraClimate: [terraclimate]
+  GLDAS: [gldas]
+  FLDAS: [fldas]
+  WaPOR: [wapor]
+  SMAP: [smap]
+  IMERG: [imerg, gpm]
+  TRMM: [trmm]
+  PERSIANN: [persiann]
+  MSWEP: [mswep]
+  GPCC: [gpcc]
+  CRU: [cru]
+  WorldClim: [worldclim]
+  CMIP6: [cmip6]
+  CORDEX: [cordex]
+  ESA-CCI: [esa cci, esa-cci, cci]
+  ESA: [esa, worldcover]
+  GloFAS: [glofas]
+  MERIT: [merit]
+  SRTM: [srtm]
+  HydroSHEDS: [hydrosheds]
+  HydroBASINS: [hydrobasins]
+  GADM: [gadm]
+  WorldPop: [worldpop]
+  DHS: [dhs]
+  FAO: [fao, faostat]
+  JRC: [jrc]
+
+# Regions: matched against filename, file attributes and email subject/body.
+# Upper-case aliases of 3 letters or fewer (ISO3 codes) are not matched in email bodies.
+# bbox = [west, south, east, north] in degrees (approximate). Used when no name matches:
+# the smallest region containing the data's centre and covering most of its bbox wins.
+regions:
+  # Countries
+  - {name: Ethiopia,      aliases: [ETH],                bbox: [33.0, 3.4, 48.0, 14.9]}
+  - {name: Kenya,         aliases: [KEN],                bbox: [33.9, -4.7, 41.9, 5.0]}
+  - {name: Uganda,        aliases: [UGA],                bbox: [29.6, -1.5, 35.0, 4.2]}
+  - {name: Tanzania,      aliases: [TZA],                bbox: [29.3, -11.7, 40.4, -1.0]}
+  - {name: Rwanda,        aliases: [RWA],                bbox: [28.9, -2.8, 30.9, -1.1]}
+  - {name: Sudan,         aliases: [SDN],                bbox: [21.8, 8.7, 38.6, 22.2]}
+  - {name: South Sudan,   aliases: [SSD],                bbox: [24.1, 3.5, 35.9, 12.2]}
+  - {name: Egypt,         aliases: [EGY],                bbox: [24.7, 22.0, 36.9, 31.7]}
+  - {name: Ghana,         aliases: [GHA],                bbox: [-3.3, 4.7, 1.2, 11.2]}
+  - {name: Burkina Faso,  aliases: [BFA],                bbox: [-5.5, 9.4, 2.4, 15.1]}
+  - {name: Mali,          aliases: [MLI],                bbox: [-12.2, 10.1, 4.3, 25.0]}
+  - {name: Niger,         aliases: [NER],                bbox: [0.2, 11.7, 16.0, 23.5]}
+  - {name: Nigeria,       aliases: [NGA],                bbox: [2.7, 4.3, 14.7, 13.9]}
+  - {name: Senegal,       aliases: [SEN],                bbox: [-17.6, 12.3, -11.3, 16.7]}
+  - {name: Zambia,        aliases: [ZMB],                bbox: [22.0, -18.1, 33.7, -8.2]}
+  - {name: Zimbabwe,      aliases: [ZWE],                bbox: [25.2, -22.4, 33.1, -15.6]}
+  - {name: Malawi,        aliases: [MWI],                bbox: [32.7, -17.1, 35.9, -9.4]}
+  - {name: Mozambique,    aliases: [MOZ],                bbox: [30.2, -26.9, 40.9, -10.5]}
+  - {name: South Africa,  aliases: [ZAF],                bbox: [16.3, -34.9, 32.9, -22.1]}
+  - {name: India,         aliases: [IND],                bbox: [68.1, 6.7, 97.4, 35.7]}
+  - {name: Pakistan,      aliases: [PAK],                bbox: [60.9, 23.6, 77.8, 37.1]}
+  - {name: Nepal,         aliases: [NPL],                bbox: [80.0, 26.3, 88.2, 30.5]}
+  - {name: Bangladesh,    aliases: [BGD],                bbox: [88.0, 20.6, 92.7, 26.6]}
+  - {name: Sri Lanka,     aliases: [LKA, Srilanka],      bbox: [79.6, 5.9, 81.9, 9.9]}
+  - {name: Myanmar,       aliases: [MMR, Burma],         bbox: [92.2, 9.8, 101.2, 28.5]}
+  - {name: Laos,          aliases: [LAO, Lao PDR],       bbox: [100.1, 13.9, 107.7, 22.5]}
+  - {name: Uzbekistan,    aliases: [UZB],                bbox: [56.0, 37.2, 73.1, 45.6]}
+  # Basins
+  - {name: NileBasin,     aliases: [Nile, Nile Basin],                 bbox: [21.0, -4.5, 40.5, 31.5]}
+  - {name: VoltaBasin,    aliases: [Volta, Volta Basin],               bbox: [-5.5, 5.5, 2.5, 14.5]}
+  - {name: LimpopoBasin,  aliases: [Limpopo, Limpopo Basin],           bbox: [25.5, -25.9, 35.0, -21.0]}
+  - {name: ZambeziBasin,  aliases: [Zambezi, Zambezi Basin],           bbox: [18.0, -20.5, 36.5, -8.5]}
+  - {name: IndusBasin,    aliases: [Indus, Indus Basin],               bbox: [66.0, 24.0, 82.0, 37.0]}
+  - {name: GangesBasin,   aliases: [Ganges, Brahmaputra, GBM],         bbox: [73.0, 21.5, 97.5, 31.5]}
+  - {name: MekongBasin,   aliases: [Mekong, Mekong Basin],             bbox: [93.9, 8.5, 109.0, 33.8]}
+  - {name: AralSeaBasin,  aliases: [Aral Sea, Amu Darya, Syr Darya],   bbox: [56.0, 33.5, 78.0, 51.0]}
