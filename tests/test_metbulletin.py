@@ -138,6 +138,8 @@ def test_dry_run_only_checks(make):
 def test_run_and_sender_rules():
     assert run_of("20261027_00Z.pdf") == "20261027_00Z"
     assert run_of("20261027_00Z (2).pdf") == "20261027_00Z"
+    assert run_of("2026102712Z.pdf") == "20261027_12Z"
+    assert run_of("forecast.pdf", EmailContext(subject="Fw: ECMWF 15 Day Forecast 2026.10.27 1200Z")) == "20261027_12Z"
     assert run_of("forecast.pdf", EmailContext(subject="Forecast 20261028_00Z")) == "20261028_00Z"
     assert run_of("report_2026.pdf") is None
     allowed = ["@meteo.gov.lk", "ops@cgiar.org"]

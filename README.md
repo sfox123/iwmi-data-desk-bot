@@ -36,7 +36,7 @@ redeploys.
 
 ## Met Dept bulletins → AWARE Sri Lanka
 
-A PDF named `<YYYYMMDD>_00Z.pdf` (the Dept. of Meteorology 15-day rainfall/temperature forecast) that is
+A PDF named `<YYYYMMDD>_00Z.pdf` or `<YYYYMMDD>12Z.pdf` (the Dept. of Meteorology 15-day rainfall/temperature forecast) that is
 emailed to the Data Drop channel from an allowed sender (`met_bulletin.allowed_senders`), or dropped into
 the channel folder, is sent to AWARE's `/api/met/upload` (`src/metbulletin.py`). AWARE digitizes and checks
 it; if accepted it is published to the forecast maps, the PDF is filed under

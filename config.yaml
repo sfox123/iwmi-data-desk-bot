@@ -35,7 +35,7 @@ state:
   local_path: "state/state.json"
   sharepoint_path: "_system/state.json"
 
-# Dept. of Meteorology 15-day forecast bulletins (PDF named <YYYYMMDD>_00Z.pdf) are published to AWARE Sri
+# Dept. of Meteorology 15-day forecast bulletins (PDF named <YYYYMMDD>_00Z.pdf or <YYYYMMDD>12Z.pdf) go to AWARE Sri
 # Lanka's forecast maps, then filed under `folder`/<year>/. AWARE checks the PDF against the bulletin layout;
 # anything else is filed as usual. Emailed bulletins must come from allowed_senders (address or @domain).
 # Needs MET_UPLOAD_TOKEN in .env (the same value as in the AWARE Vercel project).

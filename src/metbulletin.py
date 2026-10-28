@@ -1,6 +1,6 @@
 """Dept. of Meteorology 15-day forecast bulletins -> AWARE Sri Lanka's forecast maps.
 
-A bulletin is a PDF named like ``20261027_00Z.pdf`` (the 00 UTC model run date), sent by the Met Dept to the
+A bulletin is a PDF named like ``20261027_00Z.pdf`` or ``2026102712Z.pdf`` (the 00 or 12 UTC model run), sent to the
 Data Drop channel email. It is published through AWARE's upload endpoint, which digitizes the PDF and refuses
 anything that isn't a bulletin; in that case the file goes through normal filing instead.
 """
@@ -17,7 +17,8 @@ from .emailparse import EmailContext
 
 log = logging.getLogger(__name__)
 
-RUN_RE = re.compile(r"(?<!\d)(20\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01])_00Z", re.I)
+# 20261027_00Z, 2026102712Z, "2026.10.27 1200Z" (email subject)
+RUN_RE = re.compile(r"(?<!\d)(20\d{2})[.-]?(0[1-9]|1[0-2])[.-]?([0-2]\d|3[01])[ _]?(00|12)(?:00)?Z", re.I)
 
 
 class MetUploadError(Exception):
@@ -33,11 +34,12 @@ class MetResult:
 
 
 def run_of(name: str, email: EmailContext | None = None) -> str | None:
-    """'20261027_00Z.pdf' -> '20261027_00Z'. The email subject is tried when the filename has no run."""
+    """'20261027_00Z.pdf' -> '20261027_00Z', '2026102712Z.pdf' -> '20261027_12Z'. The email subject is tried
+    when the filename has no run."""
     for text in (name, email.subject if email else ""):
         m = RUN_RE.search(text or "")
         if m:
-            return f"{m.group(1)}{m.group(2)}{m.group(3)}_00Z"
+            return f"{m.group(1)}{m.group(2)}{m.group(3)}_{m.group(4)}Z"
     return None
 
 
